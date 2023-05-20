@@ -1,15 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #define int long long 
-
 struct node {
     int key;
     struct node* left;
     struct node* right;
     int height;
-    int sum;
-    int numNodes;
 };
 
 int height(struct node* N) {
@@ -29,8 +25,6 @@ struct node* newnode(int key) {
     node->left = NULL;
     node->right = NULL;
     node->height = 1;
-    node->sum = key;
-    node->numNodes = 1;
     return node;
 }
 
@@ -40,8 +34,6 @@ struct node* allocate_node(int key) {
     root->height = 0;
     root->left = NULL;
     root->right = NULL;
-    root->sum = key;
-    root->numNodes = 1;
     return root;
 }
 
@@ -54,19 +46,7 @@ int getbalance(struct node* N) {
 void set_height(struct node* node) {
     int l_height = (node->left) ? node->left->height : -1;
     int r_height = (node->right) ? node->right->height : -1;
-    node->height = max(l_height, r_height) + 1;
-}
-
-void set_sum(struct node* node) {
-    int left_sum = (node->left) ? node->left->sum : 0;
-    int right_sum = (node->right) ? node->right->sum : 0;
-    node->sum = node->key + left_sum + right_sum;
-}
-
-void set_numNodes(struct node* node) {
-    int left_nodes = (node->left) ? node->left->numNodes : 0;
-    int right_nodes = (node->right) ? node->right->numNodes : 0;
-    node->numNodes = 1 + left_nodes + right_nodes;
+    node->height = l_height > r_height ? l_height + 1 : r_height + 1;
 }
 
 struct node* LL(struct node* x) {
@@ -75,10 +55,6 @@ struct node* LL(struct node* x) {
     new->right = x;
     set_height(x);
     set_height(new);
-    set_sum(x);
-    set_sum(new);
-    set_numNodes(x);
-    set_numNodes(new);
     return new;
 }
 
@@ -88,10 +64,6 @@ struct node* RR(struct node* x) {
     new->left = x;
     set_height(x);
     set_height(new);
-    set_sum(x);
-    set_sum(new);
-    set_numNodes(x);
-    set_numNodes(new);
     return new;
 }
 
@@ -105,12 +77,6 @@ struct node* LR(struct node* x) {
     set_height(x);
     set_height(mid);
     set_height(new);
-    set_sum(x);
-    set_sum(mid);
-    set_sum(new);
-    set_numNodes(x);
-    set_numNodes(mid);
-    set_numNodes(new);
     return new;
 }
 
@@ -124,12 +90,6 @@ struct node* RL(struct node* x) {
     set_height(x);
     set_height(mid);
     set_height(new);
-    set_sum(x);
-    set_sum(mid);
-    set_sum(new);
-    set_numNodes(x);
-    set_numNodes(mid);
-    set_numNodes(new);
     return new;
 }
 
@@ -165,8 +125,6 @@ struct node* insert(struct node* root, int key) {
         root->left = insert(root->left, key);
     }
     set_height(root);
-    set_sum(root);
-    set_numNodes(root);
     n = try_rotate(root);
     return n;
 }
@@ -212,8 +170,6 @@ struct node* delete(struct node* root, int key) {
         root->right = delete(root->right, key);
     }
     set_height(root);
-    set_sum(root);
-    set_numNodes(root);
     struct node* x = try_rotate(root);
     return x;
 }
@@ -230,14 +186,17 @@ int getSum(struct node* root) {
     if (root == NULL) {
         return 0;
     }
-    return root->sum;
+    int sum = root->key;
+    sum += getSum(root->left);
+    sum += getSum(root->right);
+    return sum;
 }
 
 int getNumNodes(struct node* root) {
     if (root == NULL) {
         return 0;
     }
-    return root->numNodes;
+    return 1 + getNumNodes(root->left) + getNumNodes(root->right);
 }
 
 signed main() {
@@ -246,9 +205,11 @@ signed main() {
     struct node* root = NULL;
     int arr[n];
     for (int i = 0; i < n; i++) {
-        int q;
-        scanf("%lld",&q);
-        root=insert(root,q);
+        scanf("%lld", &arr[i]);
+    }
+
+    for (int j = 0; j < n; j++) {
+        root = insert(root, arr[j]);
     }
 
     while (getNumNodes(root) >= 2) {
